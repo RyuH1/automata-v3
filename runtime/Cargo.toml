@@ -17,6 +17,7 @@ substrate-wasm-builder={ git = 'https://github.com/paritytech/substrate.git', ta
 # external dependencies
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
 hex-literal= {optional = true, version = '0.3.1'}
+serde = { version = "1.0.119", optional = true, features = ["derive"] }
 
 # Substrate dependencies
 frame-benchmarking = {default-features = false, optional = true, git = 'https://github.com/paritytech/substrate.git', tag = 'v3.0.0'}
@@ -138,4 +139,5 @@ std = [
 	"pallet-offences/std",
 	"pallet-authority-discovery/std",
 	"pallet-identity/std",
+	'serde'
 ]
