@@ -270,7 +270,7 @@ impl pallet_balances::Config for Runtime {
     type DustRemoval = ();
     type Event = Event;
     type ExistentialDeposit = ExistentialDeposit;
-    type AccountStore = frame_system::Module<Runtime>;
+    type AccountStore = System;
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 
@@ -295,7 +295,7 @@ parameter_types! {
 
 impl pallet_timestamp::Config for Runtime {
     type Moment = Moment;
-    type OnTimestampSet = Aura;
+    type OnTimestampSet = Aura; //DIFF
     type MinimumPeriod = MinimumPeriod;
     type WeightInfo = pallet_timestamp::weights::SubstrateWeight<Runtime>;
 }
@@ -314,7 +314,7 @@ impl pallet_authorship::Config for Runtime {
 impl_opaque_keys! {
     pub struct SessionKeys {
         pub grandpa: Grandpa,
-        pub aura: Aura,
+        pub aura: Aura, //DIFF
         pub im_online: ImOnline,
         pub authority_discovery: AuthorityDiscovery,
     }
@@ -330,8 +330,8 @@ impl pallet_session::Config for Runtime {
     type Event = Event;
     type ValidatorId = <Self as frame_system::Config>::AccountId;
     type ValidatorIdOf = pallet_staking::StashOf<Self>;
-    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
-    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>; //DIFF
+    type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>; //DIFF
     type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, Staking>;
     type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
     type Keys = SessionKeys;
@@ -389,11 +389,18 @@ impl pallet_staking::Config for Runtime {
         pallet_collective::EnsureProportionAtLeast<_3, _4, AccountId, CouncilCollective>,
     >;
     type SessionInterface = Self;
+    type RewardCurve = RewardCurve;
     type NextNewSession = Session;
+    type ElectionLookahead = ElectionLookahead;
+    type Call = Call;
+    type MaxIterations = MaxIterations;
+    type MinSolutionScoreBump = MinSolutionScoreBump;
     type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
+    type UnsignedPriority = StakingUnsignedPriority;
     // The unsigned solution weight targeted by the OCW. We set it to the maximum possible value of
     // a single extrinsic.
     type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
+    type OffchainSolutionWeightLimit = OffchainSolutionWeightLimit;
 }
 
 parameter_types! {
@@ -446,6 +453,7 @@ impl pallet_democracy::Config for Runtime {
         EnsureRoot<AccountId>,
         pallet_collective::EnsureProportionAtLeast<_1, _1, AccountId, TechnicalCollective>,
     >;
+    type OperationalPreimageOrigin = pallet_collective::EnsureMember<AccountId, CouncilCollective>;
     type BlacklistOrigin = EnsureRoot<AccountId>;
     // Any single technical committee member may veto a coming council proposal, however they can
     // only do it once and it lasts only for the cooloff period.
@@ -532,18 +540,13 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
     type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
 }
 
-type EnsureRootOrHalfCouncil = EnsureOneOf<
-    AccountId,
-    EnsureRoot<AccountId>,
-    pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>,
->;
 impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
     type Event = Event;
-    type AddOrigin = EnsureRootOrHalfCouncil;
-    type RemoveOrigin = EnsureRootOrHalfCouncil;
-    type SwapOrigin = EnsureRootOrHalfCouncil;
-    type ResetOrigin = EnsureRootOrHalfCouncil;
-    type PrimeOrigin = EnsureRootOrHalfCouncil;
+    type AddOrigin = frame_system::EnsureRoot<AccountId>;
+    type RemoveOrigin = frame_system::EnsureRoot<AccountId>;
+    type SwapOrigin = frame_system::EnsureRoot<AccountId>;
+    type ResetOrigin = frame_system::EnsureRoot<AccountId>;
+    type PrimeOrigin = frame_system::EnsureRoot<AccountId>;
     type MembershipInitialized = TechnicalCommittee;
     type MembershipChanged = TechnicalCommittee;
 }
@@ -623,6 +626,7 @@ impl pallet_im_online::Config for Runtime {
     type AuthorityId = ImOnlineId;
     type Event = Event;
     type ReportUnresponsiveness = Offences;
+    type SessionDuration = SessionIndex;
     type UnsignedPriority = ImOnlineUnsignedPriority;
     type WeightInfo = pallet_im_online::weights::SubstrateWeight<Runtime>;
 }
@@ -688,6 +692,12 @@ parameter_types! {
     pub const MaxRegistrars: u32 = 20;
 }
 
+type EnsureRootOrHalfCouncil = EnsureOneOf<
+  AccountId,
+  EnsureRoot<AccountId>,
+  pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>,
+>;
+
 impl pallet_identity::Config for Runtime {
     type Event = Event;
     type Currency = Balances;
@@ -743,6 +753,9 @@ impl pallet_evm::Config for Runtime {
         pallet_evm_precompile_simple::Identity,
     );
     type ChainId = ChainId;
+    type BlockGasLimit = BlockGasLimit;
+    type BanlistChecker = ();
+    type OnChargeTransaction = ();
 }
 
 pub struct EthereumFindAuthor<F>(PhantomData<F>);
@@ -1137,19 +1150,19 @@ impl_runtime_apis! {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use frame_system::offchain::CreateSignedTransaction;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use frame_system::offchain::CreateSignedTransaction;
 
-    #[test]
-    fn validate_transaction_submitter_bounds() {
-        fn is_submit_signed_transaction<T>()
-        where
-            T: CreateSignedTransaction<Call>,
-        {
-        }
+//     #[test]
+//     fn validate_transaction_submitter_bounds() {
+//         fn is_submit_signed_transaction<T>()
+//         where
+//             T: CreateSignedTransaction<Call>,
+//         {
+//         }
 
-        is_submit_signed_transaction::<Runtime>();
-    }
-}
+//         is_submit_signed_transaction::<Runtime>();
+//     }
+// }
