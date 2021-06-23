@@ -1,13 +1,17 @@
 use sp_core::{Pair, Public, sr25519};
 use node_template_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature, EVMConfig, EthereumConfig
+	AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
+	SudoConfig, SystemConfig, WASM_BINARY, EVMConfig, EthereumConfig
 };
+use node_template_runtime::constants::currency::*;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{Verify, IdentifyAccount};
 use sc_service::ChainType;
 use std::collections::BTreeMap;
+use hex_literal::hex;
+use sp_core::{H160, U256};
+pub use automata_primitives::{AccountId, Balance, Signature};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -134,6 +138,10 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
+
+    const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
+    const STASH: Balance = 100 * DOLLARS;
+
 	GenesisConfig {
 		frame_system: Some(SystemConfig {
 			// Add Wasm runtime to storage.
@@ -155,8 +163,34 @@ fn testnet_genesis(
 			key: root_key,
 		}),
 		pallet_evm: Some(EVMConfig {
-			accounts: BTreeMap::new(),
-		}),
+            accounts: vec![
+                H160::from(hex_literal::hex![
+                    "18bD778c044F47d41CFabF336F2b1e06648e0771"
+                ]),
+                H160::from(hex_literal::hex![
+                    "b4b58365166402a78b4ac05e1b13b6d64fCcF60f"
+                ]),
+                H160::from(hex_literal::hex![
+                    "2CCDD9Fa13d97F6FAEC4B1D8085861AE57e1D9c9"
+                ]),
+                H160::from(hex_literal::hex![
+                    "3e29eF30D9836928DDc3667af68da02bAd913316"
+                ]),
+            ]
+            .into_iter()
+            .map(|x| {
+                (
+                    x,
+                    pallet_evm::GenesisAccount {
+                        balance: U256::from(ENDOWMENT),
+                        nonce: Default::default(),
+                        code: Default::default(),
+                        storage: Default::default(),
+                    },
+                )
+            })
+            .collect(),
+        }),
 		pallet_ethereum: Some(EthereumConfig {}),
 	}
 }

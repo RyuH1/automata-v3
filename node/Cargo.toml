@@ -21,6 +21,7 @@ substrate-build-script-utils = '3.0.0'
 [dependencies]
 jsonrpc-core = '15.1.0'
 structopt = '0.3.8'
+hex-literal = { version = '0.3.1' }
 
 # Substrate dependencies
 frame-benchmarking = '3.1.0'
@@ -53,6 +54,14 @@ substrate-frame-rpc-system = '3.0.0'
 
 # local dependencies
 node-template-runtime = { path = '../runtime', version = '3.0.0' }
+automata-primitives = { default-features = false, path = "../primitives" }
+
+pallet-evm = { default-features = false, version = '3.0.0'}
+fc-rpc = { default-features = false, version = '1.0.0'}
+fp-rpc = { default-features = false, version = '1.0.0'}
+fc-consensus = { default-features = false, version = '1.0.0'}
+fp-consensus = { default-features = false, version = '1.0.0'}
+fc-rpc-core = { default-features = false, version = '1.0.0'}
 
 [features]
 default = []
