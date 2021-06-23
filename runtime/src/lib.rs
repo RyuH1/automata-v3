@@ -6,8 +6,8 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use sp_std::prelude::*;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_std::{marker::PhantomData, prelude::*};
+use sp_core::{crypto::KeyTypeId, crypto::Public, OpaqueMetadata, H160, H256, U256};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource},
@@ -28,26 +28,26 @@ use sp_version::NativeVersion;
 pub use sp_runtime::BuildStorage;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
+use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, FeeCalculator, Runner, HashedAddressMapping};
 pub use sp_runtime::{Permill, Perbill};
 pub use frame_support::{
 	construct_runtime, parameter_types, StorageValue,
-	traits::{KeyOwnerProofSystem, Randomness},
+	traits::{KeyOwnerProofSystem, Randomness, FindAuthor},
 	weights::{
 		Weight, IdentityFee,
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 	},
+    ConsensusEngineId,
 };
 use pallet_transaction_payment::CurrencyAdapter;
 
+pub mod constants;
+use constants::{currency::*, time::*};
+
+pub use automata_primitives::{AccountId, Signature};
+
 /// An index to a block.
 pub type BlockNumber = u32;
-
-/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
-
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
 /// The type for looking up accounts. We don't expect more than 4 billion of them, but you
 /// never know...
@@ -256,6 +256,62 @@ impl pallet_sudo::Config for Runtime {
 	type Call = Call;
 }
 
+pub struct EthereumFindAuthor<F>(PhantomData<F>);
+impl<F: FindAuthor<u32>> FindAuthor<H160> for EthereumFindAuthor<F> {
+  fn find_author<'a, I>(digests: I) -> Option<H160>
+  where
+    I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+  {
+    // if let Some(author_index) = F::find_author(digests) {
+    //   let authority_id = Babe::authorities()[author_index as usize].clone();
+    //   return Some(H160::from_slice(&authority_id.0.to_raw_vec()[4..24]));
+    // }
+    None
+  }
+}
+
+impl pallet_ethereum::Config for Runtime {
+    type Event = Event;
+    type FindAuthor = EthereumFindAuthor<Aura>;
+    type StateRoot = pallet_ethereum::IntermediateStateRoot;
+}
+
+pub struct FixedGasPrice;
+
+impl FeeCalculator for FixedGasPrice {
+  fn min_gas_price() -> U256 {
+    50_000_000_000u64.into()
+  }
+}
+
+parameter_types! {
+    pub const ChainId: u64 = 86;
+}
+
+parameter_types! {
+    pub BlockGasLimit: U256 = U256::from(30_000_000); // double the ethereum block limit
+  }
+
+impl pallet_evm::Config for Runtime {
+    type FeeCalculator = FixedGasPrice;
+    type GasWeightMapping = ();
+    type CallOrigin = EnsureAddressTruncated;
+    type WithdrawOrigin = EnsureAddressTruncated;
+    type AddressMapping = HashedAddressMapping<BlakeTwo256>;
+    type Currency = Balances;
+    type Event = Event;
+    type Runner = pallet_evm::runner::stack::Runner<Self>;
+    type Precompiles = (
+      pallet_evm_precompile_simple::ECRecover,
+      pallet_evm_precompile_simple::Sha256,
+      pallet_evm_precompile_simple::Ripemd160,
+      pallet_evm_precompile_simple::Identity,
+    );
+    type ChainId = ChainId;
+    type BlockGasLimit = BlockGasLimit;
+    type OnChargeTransaction = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -271,6 +327,8 @@ construct_runtime!(
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Module, Storage},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
+        EVM: pallet_evm::{Module, Config, Call, Storage, Event<T>},
+        Ethereum: pallet_ethereum::{Module, Call, Storage, Event, Config, ValidateUnsigned},
 	}
 );
 

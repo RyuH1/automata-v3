@@ -53,11 +53,11 @@ pallet-marketplace = {default-features = false, version = '3.0.0', path = '../pa
 pallet-fulfillment = {default-features = false, version = '3.0.0', path = '../pallets/fulfillment'}
 
 # customized dependencies
-pallet-ethereum = { git = "https://github.com/ryuh1/frontier.git", default-features = false }
-pallet-evm = { git = "https://github.com/ryuh1/frontier.git", default-features = false  }
-pallet-evm-precompile-simple = { git = "https://github.com/ryuh1/frontier.git", default-features = false }
+pallet-ethereum = { git = "https://github.com/automata-network/frontier.git", tag = "v2.1.0", default-features = false }
+pallet-evm = { git = "https://github.com/automata-network/frontier.git", tag = "v2.1.0", default-features = false }
+pallet-evm-precompile-simple = { git = "https://github.com/automata-network/frontier.git", tag = "v2.1.0", default-features = false }
 pallet-elections-phragmen = { default-features = false, tag = 'v3.0.0'}
-fp-rpc = { git = "https://github.com/ryuh1/frontier.git", default-features = false }
+fp-rpc = { git = "https://github.com/automata-network/frontier.git", tag = "v2.1.0", default-features = false }
 pallet-im-online = { default-features = false, git = "https://github.com/paritytech/substrate.git", tag = 'v3.0.0' }
 pallet-session = { features = ["historical"],  default-features = false, git = "https://github.com/paritytech/substrate.git", tag = 'v3.0.0' }
 smallvec = "1.4.2"

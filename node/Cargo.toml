@@ -21,6 +21,7 @@ substrate-build-script-utils = { git = 'https://github.com/paritytech/substrate.
 [dependencies]
 jsonrpc-core = '15.1.0'
 structopt = '0.3.8'
+hex-literal = { version = '0.3.1' }
 
 # Substrate dependencies
 frame-benchmarking = { git = 'https://github.com/paritytech/substrate.git', tag = 'v3.0.0'}
@@ -50,9 +51,11 @@ sp-inherents = { git = 'https://github.com/paritytech/substrate.git', tag = 'v3.
 sp-runtime = { git = 'https://github.com/paritytech/substrate.git', tag = 'v3.0.0'}
 sp-transaction-pool = { git = 'https://github.com/paritytech/substrate.git', tag = 'v3.0.0'}
 substrate-frame-rpc-system = { git = 'https://github.com/paritytech/substrate.git', tag = 'v3.0.0'}
+pallet-evm = { git = "https://github.com/automata-network/frontier.git", tag = "v2.1.0", default-features = false }
 
 # local dependencies
 automata-runtime = {version = '3.0.0', path = '../runtime'}
+automata-primitives = { path = "../primitives" }
 
 [features]
 default = []
