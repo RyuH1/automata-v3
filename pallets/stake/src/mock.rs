@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-
-use crate::{Config, Module};
-use frame_support::{
-    impl_outer_dispatch, impl_outer_event, impl_outer_origin, parameter_types, weights::Weight,
-};
+use crate::{Config,};
+use frame_support::{parameter_types, weights::Weight,};
 use frame_system as system;
 use pallet_balances as balances;
 use sp_core::H256;
@@ -11,28 +8,21 @@ use sp_runtime::{testing::Header, traits::IdentityLookup, Perbill};
 
 use crate as stake;
 
-impl_outer_origin! {
-    pub enum Origin for Test {}
-}
+type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
+type Block = frame_system::mocking::MockBlock<Test>;
 
-impl_outer_event! {
-    pub enum TestEvent for Test {
-        system<T>,
-        balances<T>,
-        stake<T>,
-    }
-}
+frame_support::construct_runtime!(
+	pub enum Test where
+		Block = Block,
+		NodeBlock = Block,
+		UncheckedExtrinsic = UncheckedExtrinsic,
+	{
+        System: frame_system::{Module, Call, Config, Storage, Event<T>},
+        Stake: stake::{Module, Call, Storage, Event<T>},
+        Balances: balances::{Module, Call, Storage, Event<T>},
+	}
+);
 
-impl_outer_dispatch! {
-    pub enum Call for Test where origin: Origin {
-        stake::Stake,
-    }
-}
-
-// Configure a mock runtime to test the pallet.
-
-#[derive(Clone, Eq, PartialEq)]
-pub struct Test;
 parameter_types! {
     pub const BlockHashCount: u64 = 250;
     pub const MaximumBlockWeight: Weight = 1024;
@@ -52,11 +42,11 @@ impl frame_system::Config for Test {
     type AccountId = u64;
     type Lookup = IdentityLookup<Self::AccountId>;
     type Header = Header;
-    type Event = TestEvent;
+    type Event = Event;
     type BlockHashCount = BlockHashCount;
     type DbWeight = ();
     type Version = ();
-    type PalletInfo = ();
+    type PalletInfo = PalletInfo;
     type AccountData = balances::AccountData<u64>;
     type OnNewAccount = ();
     type OnKilledAccount = ();
@@ -73,7 +63,7 @@ parameter_types! {
 impl balances::Config for Test {
     type Balance = u64;
     type DustRemoval = ();
-    type Event = TestEvent;
+    type Event = Event;
     type ExistentialDeposit = ();
     type AccountStore = System;
     type MaxLocks = MaxLocks;
@@ -81,15 +71,11 @@ impl balances::Config for Test {
 }
 
 impl Config for Test {
-    type Event = TestEvent;
+    type Event = Event;
     type Currency = Balances;
     type Slash = ();
     type Reward = ();
 }
-
-pub type System = frame_system::Module<Test>;
-pub type Balances = balances::Module<Test>;
-pub type Stake = Module<Test>;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut t = system::GenesisConfig::default()
