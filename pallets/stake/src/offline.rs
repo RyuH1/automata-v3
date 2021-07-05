@@ -19,7 +19,7 @@ pub trait AutomataOffence<Offender> {
     type SpecialId: Clone + codec::Codec + Ord;
     fn kind(&self) -> Kind;
     fn offender(&self) -> Offender;
-    fn slash(&self, offline_time: u32, total_offenline: u32, param: SlashParms) -> Perbill;
+    fn slash(&self, offline_time: u32, total_offenline: u32, param: SlashParams) -> Perbill;
     fn spid(&self) -> GeodeIdd<Offender>;
 }
 
@@ -51,7 +51,7 @@ impl<Offender: Clone> AutomataOffence<Offender> for GeodeOffence<Offender> {
         self.offender.clone()
     }
 
-    fn slash(&self, offline_time: u32, _total_offenline: u32, _param: SlashParms) -> Perbill {
+    fn slash(&self, offline_time: u32, _total_offenline: u32, _param: SlashParams) -> Perbill {
         Perbill::from_parts(5 * offline_time)
     }
 
@@ -152,7 +152,7 @@ impl<ID> OffenceTempRecord<ID> {
 ///  first_domain to second_domain : second_slash_rate
 ///  second_domain to third_domain : third_slash_rate
 #[derive(Clone, PartialEq, Eq, Encode, Decode, sp_runtime::RuntimeDebug)]
-pub struct SlashParms {
+pub struct SlashParams {
     pub time_span: u64,
     pub base_slash_rate: Perbill,
     pub first_domain: u64,
@@ -162,9 +162,9 @@ pub struct SlashParms {
     pub third_domain: u64,
 }
 
-impl Default for SlashParms {
+impl Default for SlashParams {
     fn default() -> Self {
-        SlashParms {
+        SlashParams {
             time_span: 100,
             base_slash_rate: Perbill::from_percent(5),
             first_domain: 3,

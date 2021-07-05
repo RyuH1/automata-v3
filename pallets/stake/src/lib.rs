@@ -32,7 +32,7 @@ pub mod pallet {
 
     pub use crate::offline::{
         GeodeOffence, AutomataOffence, AutomataOffenceDetails, AutomataOffenceError, AutomataReportOffence, GeodeIdd,
-        Kind, OffenceReason, OffenceTempRecord, OnAutomataOffenceHandler, SlashParms,
+        Kind, OffenceReason, OffenceTempRecord, OnAutomataOffenceHandler, SlashParams,
     };
 
 
@@ -110,7 +110,7 @@ pub mod pallet {
     
 	#[pallet::storage]
 	#[pallet::getter(fn slash_rule)]
-    pub(super) type SlashRule<T: Config> = StorageValue<_, SlashParms>;
+    pub(super) type SlashRule<T: Config> = StorageValue<_, SlashParams>;
     
     #[pallet::storage]
 	#[pallet::getter(fn reward_rule)]
@@ -318,12 +318,12 @@ pub mod pallet {
             let to_user: BalanceOf<T> = *reward_rate * to_extra_slash;
             compensation_to_user += to_user;
 
-            let reward_payout_to_repoeter: BalanceOf<T> = val_extra_slashed - compensation_to_user;
+            let reward_payout_to_reporter: BalanceOf<T> = val_extra_slashed - compensation_to_user;
 
             (
                 val_extra_slashed,
                 compensation_to_user,
-                reward_payout_to_repoeter,
+                reward_payout_to_reporter,
             )
         }
 
@@ -346,7 +346,7 @@ pub mod pallet {
             ledger.seller.insert(offence_geoid.clone(), new_stake);
             <Users<T>>::insert(provider, ledger);
 
-            // reword report
+            // reward report
             //TODO:: div the val_reward
             let _num_reporter = reporters.len();
             for reporter in reporters {
